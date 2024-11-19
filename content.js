@@ -34,7 +34,7 @@ const restrictedWords = [
   ];
   
 
-// Function to count restricted words
+// // Function to count restricted words
 function countRestrictedWords() {
   let count = 0;
   const inputs = document.querySelectorAll("textarea, input[type='text']");
@@ -51,118 +51,141 @@ function countRestrictedWords() {
 
 // Monitor for changes in text inputs
 function monitorInputs() {
-  document.addEventListener("input", () => {
     const restrictedWordCount = countRestrictedWords();
-
     // Send the count to the background script
     chrome.runtime.sendMessage({
       type: "updateBadge",
       count: restrictedWordCount,
     });
+  }
+  document.addEventListener("input", () => {
+    monitorInputs();
   });
-}
 
-// Function to replace restricted words with a dash-separated version
-function replaceRestrictedWords() {
-  const inputs = document.querySelectorAll("textarea, input[type='text']");
-  inputs.forEach((input) => {
-    const text = input.value;
-    const regex = new RegExp(`\\b(${restrictedWords.join("|")})\\b`, "gi");
-
-    // Replace restricted words with dash-separated versions
-    const replacedText = text.replace(regex, (match) => {
-      return match.split("").join("-");
-    });
-
-    input.value = replacedText; // Update the input's value
-  });
-}
-
-// Function to highlight restricted words
-// function highlightRestrictedWords() {
+// // Function to replace restricted words with a dash-separated version
+// function replaceRestrictedWords() {
 //   const inputs = document.querySelectorAll("textarea, input[type='text']");
 //   inputs.forEach((input) => {
 //     const text = input.value;
 //     const regex = new RegExp(`\\b(${restrictedWords.join("|")})\\b`, "gi");
-//     const highlightedText = text.replace(regex, (match) => `[[${match}]]`);
 
-//     // Temporarily show highlights in the input (highlighting in input fields is limited)
-//     input.value = highlightedText;
+//     // Replace restricted words with dash-separated versions
+//     const replacedText = text.replace(regex, (match) => {
+//       return match.split("").join("-");
+//     });
+
+//     input.value = replacedText; // Update the input's value
 //   });
 // }
 
+function replaceRestrictedWords(wordsToReplace) {
+  const inputs = document.querySelectorAll("textarea, input[type='text']");
+  inputs.forEach((input) => {
+    let text = input.value;
 
-// Highlight restricted words using an overlay
-function highlightRestrictedWords() {
-    const inputs = document.querySelectorAll("textarea, input[type='text']");
-  
-    inputs.forEach((input) => {
-      // Create a parent wrapper if not already present
-      if (!input.parentElement.classList.contains("highlight-wrapper")) {
-        const wrapper = document.createElement("div");
-        wrapper.className = "highlight-wrapper";
-        wrapper.style.position = "relative";
-        input.parentElement.insertBefore(wrapper, input);
-        wrapper.appendChild(input);
-      }
-  
-      // Create an overlay for the highlights
-      let overlay = input.parentElement.querySelector(".highlight-overlay");
-      if (!overlay) {
-        overlay = document.createElement("div");
-        overlay.className = "highlight-overlay";
-        overlay.style.position = "absolute";
-        overlay.style.left = 0;
-        overlay.style.top = '215px';         
-        overlay.style.background = '#e8f1ff';
-        overlay.style.width = "100%";
-        overlay.style.height = "100%";
-        overlay.style.pointerEvents = "none";
-        overlay.style.zIndex = "1";
-        overlay.style.color = "transparent"; // Transparent to mimic input field
-        overlay.style.whiteSpace = "pre-wrap"; // Preserve whitespace
-        overlay.style.fontSize = window.getComputedStyle(input).fontSize;
-        overlay.style.fontFamily = window.getComputedStyle(input).fontFamily;
-        overlay.style.lineHeight = window.getComputedStyle(input).lineHeight;
-        input.parentElement.appendChild(overlay);
-      }
-  
-      // Get the input's current value
-      const text = input.value;
-  
-      // Replace restricted words with highlighted spans
-      const regex = new RegExp(`\\b(${restrictedWords.join("|")})\\b`, "gi");
-      const highlightedText = text.replace(regex, (match) => {
-        return `<span class="highlight">${match}</span>`;
-      });
-  
-      // Update the overlay's content
-      overlay.innerHTML = highlightedText;
-  
-      // Synchronize overlay position with input scrolling
-      input.addEventListener("scroll", () => {
-        overlay.style.transform = `translateY(${-input.scrollTop}px)`;
-      });
+    // Replace only the words in the provided list
+    wordsToReplace.forEach((word) => {
+      const regex = new RegExp(`\\b${word}\\b`, "gi");
+      text = text.replace(regex, (match) => match.split("").join("-"));
     });
-  }
-  
-  // Add a listener to monitor text inputs and highlight dynamically
-  document.addEventListener("input", highlightRestrictedWords);
-  
 
+    input.value = text; // Update the input field
+  });
 
-// Listen for messages from the popup
-chrome.runtime.onMessage.addListener((message) => {
+  console.log("Replaced Words with Dashes:", wordsToReplace); // Debugging log
+}
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "replaceAll") {
-    replaceRestrictedWords();
+    if (message.words && Array.isArray(message.words)) {
+      replaceRestrictedWords(message.words);
+      sendResponse({ success: true }); // Confirm action success
+    } else {
+      console.error("No words provided to replace.");
+      sendResponse({ success: false });
+    }
   }
 });
 
+
+
+
+
+// Function to find restricted words in input fields
+function getRestrictedWords() {
+  const wordsFound = [];
+  const inputs = document.querySelectorAll("textarea, input[type='text']");
+  inputs.forEach((input) => {
+    const text = input.value;
+    const regex = new RegExp(`\\b(${restrictedWords.join("|")})\\b`, "gi");
+    const matches = text.match(regex);
+    if (matches) {
+      matches.forEach((word) => {
+        if (!wordsFound.includes(word.toLowerCase())) {
+          wordsFound.push(word.toLowerCase()); // Avoid duplicates
+        }
+      });
+    }
+  });
+  return wordsFound;
+}
+
+
+// Listen for messages from the popup
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "getRestrictedWords") {
+    // Return restricted words to the popup
+    const words = getRestrictedWords();
+    sendResponse({ words: words });
+  }
+
+  if (message.action === "replaceAll") {
+    const wordsToReplace = message.words; // Words to be replaced
+    const inputs = document.querySelectorAll("textarea, input[type='text']");
+
+    inputs.forEach((input) => {
+      let text = input.value;
+
+      // Replace only the words in the provided list
+      wordsToReplace.forEach((word) => {
+        const regex = new RegExp(`\\b${word}\\b`, "gi");
+        text = text.replace(regex, (match) => match.split("").join("-"));
+      });
+
+      input.value = text;
+    });
+  }
+});
+
+
+
 // Initialize
 monitorInputs();
-highlightRestrictedWords();
-
 
 document.addEventListener("click", () => {
-    highlightRestrictedWords();
-  });
+monitorInputs();
+});
+
+
+chrome.tabs.sendMessage(tabs[0].id, { action: "getRestrictedWords" }, (response) => {
+  console.log("Restricted Words Response:", response); // Log response for debugging
+  if (response && response.words) {
+    const words = response.words;
+    console.log("Words Found:", words); // Debugging log
+  }
+});
+
+
+// Respond to "getRestrictedWords" action
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "getRestrictedWords") {
+    const words = getRestrictedWords();
+    console.log("Restricted words sent to popup:", words); // Debugging log
+    sendResponse({ words: words });
+  }
+});
+
+
+
+
+console.log("replaceAll message received:", message.words);
