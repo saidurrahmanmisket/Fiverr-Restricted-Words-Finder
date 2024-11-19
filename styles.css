@@ -1,0 +1,46 @@
+/* Highlight restricted words */
+.highlight-error {
+  border: 2px solid red;
+  background-color: #ffe6e6;
+}
+
+/* Warning message style */
+.warning-message {
+  color: red;
+  font-size: 12px;
+  margin-top: 5px;
+}
+ /* Highlight restricted words */
+.highlight {
+  background-color: yellow;
+  color: black;
+  font-weight: bold;
+}
+
+
+
+/* Wrapper for input field and highlight overlay */
+.highlight-wrapper {
+  position: relative;
+  display: block;
+  width: 200%;
+}
+
+/* Overlay to mimic input field and display highlights */
+.highlight-overlay {
+  position: absolute;
+  top: 25;
+  left: 500px;
+  color: transparent;
+  pointer-events: none;
+  z-index: 1;
+  white-space: pre-wrap;
+  overflow: hidden;
+}
+
+/* Highlight style */
+.highlight-overlay .highlight {
+  background-color: yellow;
+  color: black;
+  font-weight: bold;
+}
