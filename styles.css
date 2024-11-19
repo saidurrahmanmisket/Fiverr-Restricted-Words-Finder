@@ -46,10 +46,10 @@
 #restrictedWordsList {
   padding: 0;
   margin: 0;
-  list-style-type: none; /* Remove default list styling */
+  list-style-type: none; 
   max-height: 150px; /* Limit the height */
   overflow-y: auto; /* Add scrolling for overflow */
-  border: 1px solid #ccc; /* Optional: to make it look like a container */
+  border: 1px solid #ccc; 
   border-radius: 5px;
   padding: 10px;
 }

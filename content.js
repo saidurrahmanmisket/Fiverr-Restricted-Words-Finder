@@ -62,21 +62,6 @@ function monitorInputs() {
     monitorInputs();
   });
 
-// // Function to replace restricted words with a dash-separated version
-// function replaceRestrictedWords() {
-//   const inputs = document.querySelectorAll("textarea, input[type='text']");
-//   inputs.forEach((input) => {
-//     const text = input.value;
-//     const regex = new RegExp(`\\b(${restrictedWords.join("|")})\\b`, "gi");
-
-//     // Replace restricted words with dash-separated versions
-//     const replacedText = text.replace(regex, (match) => {
-//       return match.split("").join("-");
-//     });
-
-//     input.value = replacedText; // Update the input's value
-//   });
-// }
 
 function replaceRestrictedWords(wordsToReplace) {
   const inputs = document.querySelectorAll("textarea, input[type='text']");
