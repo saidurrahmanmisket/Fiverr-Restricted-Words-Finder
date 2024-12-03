@@ -1,26 +1,31 @@
 {
-    "manifest_version": 3,
-    "name": "Restricted Words Highlighter",
-    "version": "1.1",
-    "description": "Highlights restricted words and shows a badge with the count.",
-    "permissions": ["activeTab", "scripting"],
-    "background": {
-      "service_worker": "background.js"
-    },
-    "content_scripts": [
-      {
-        "matches": ["https://translate.google.com/*"],
-        "js": ["content.js"],
-        "css": ["styles.css"]
-      }
-    ],
-    "action": {
-    "default_popup": "popup.html",
-      "default_icon": {
-        "16": "icons/icon16.png",
-        "48": "icons/icon48.png",
-        "128": "icons/icon128.png"
-      }
+  "manifest_version": 3,
+  "name": "Restricted Words Highlighter",
+  "version": "1.1",
+  "description": "Highlights restricted words, shows a badge with the count, and allows replacing them with dashes.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://translate.google.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
     }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "host_permissions": [
+    "*://*/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
   }
-  
+}
